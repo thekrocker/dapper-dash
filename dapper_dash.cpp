@@ -1,5 +1,14 @@
 #include "raylib.h"
 
+struct AnimData
+{
+    Rectangle rect;
+    Vector2 pos;
+    int frame;
+    float elapsedTime;
+    float totalTime;
+};
+
 int main()
 {
     // Newton's second law: Force = Mass * Acceleration
@@ -17,17 +26,16 @@ int main()
     // Character properties
     const int spriteCount = 6;
     Texture2D characterTexture = LoadTexture("textures/scarfy.png");
-    Rectangle characterRect;
-    characterRect.width = characterTexture.width / spriteCount; // Since we have 6 sprites in texture
-    characterRect.height = characterTexture.height;
-    characterRect.x = 0;
-    characterRect.y = 0;
-    Vector2 characterPos;
-    characterPos.x = windowWidth / 2 - characterRect.width / 2;
-    characterPos.y = windowHeight - characterRect.height;
-    int currentSpriteFrame{};
-    float elapsed{};
-    float total{1.0 / 12.0};
+
+    AnimData chAnimData{
+        {0,0,characterTexture.width / spriteCount, characterTexture.height},
+           {windowWidth / 2 - chAnimData.rect.width / 2,
+            windowHeight - chAnimData.rect.height},
+           0,
+           0.0,
+           1.0/12.0
+           };
+
 
     // Nebula Properties
     const int spriteCountPerCell = 8;
@@ -45,7 +53,7 @@ int main()
         ClearBackground(WHITE);
 
         // JUMP MECHANICS
-        isGrounded = characterPos.y >= (windowHeight - characterRect.height);
+        isGrounded = chAnimData.pos.y >= (windowHeight - chAnimData.rect.height);
 
         if (isGrounded)
         {
@@ -63,25 +71,25 @@ int main()
                 velocity -= jumpPower;
         }
 
-        characterPos.y += velocity * GetFrameTime();
+        chAnimData.pos.y += velocity * GetFrameTime();
         nebulaPosition.x += nebulaVelocity * GetFrameTime();
 
         // Draw Texture and set animation
-        DrawTextureRec(characterTexture, characterRect, characterPos, WHITE);
+        DrawTextureRec(characterTexture, chAnimData.rect, chAnimData.pos, WHITE);
 
         // Set player animation only if we are grounded
         if (isGrounded)
         {
-            elapsed += GetFrameTime();
-            if (elapsed >= total)
+            chAnimData.elapsedTime += GetFrameTime();
+            if (chAnimData.elapsedTime >= chAnimData.totalTime)
             {
-                elapsed = 0;
-                currentSpriteFrame++;
-                characterRect.x = currentSpriteFrame * characterRect.width;
+                chAnimData.elapsedTime = 0;
+                chAnimData.frame++;
+                chAnimData.rect.x = chAnimData.frame * chAnimData.rect.width;
 
-                if (currentSpriteFrame >= spriteCount)
+                if (chAnimData.frame >= spriteCount)
                 {
-                    currentSpriteFrame = 0;
+                    chAnimData.frame = 0;
                 }
             }
         }
