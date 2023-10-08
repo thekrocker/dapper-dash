@@ -14,13 +14,17 @@ int main()
     // Newton's second law: Force = Mass * Acceleration
     const int windowWidth = 512;
     const int windowHeight = 380;
+    
+    int windowDimensions[2];
+    windowDimensions[0] = 512;
+    windowDimensions[1] = 380;
 
     const int gravity = 1'000; // Acceleration dude to gravity (pixels/frame)/ frame
     int velocity{};
     int jumpPower{550};
     bool isGrounded{false};
 
-    InitWindow(windowWidth, windowHeight, "Dapper Dash");
+    InitWindow(windowDimensions[0], windowDimensions[1], "Dapper Dash");
     SetTargetFPS(60);
 
     // Character properties
@@ -28,9 +32,8 @@ int main()
     Texture2D characterTexture = LoadTexture("textures/scarfy.png");
 
     AnimData chAnimData{
-        {0,0,characterTexture.width / spriteCount, characterTexture.height},
-           {windowWidth / 2 - chAnimData.rect.width / 2,
-            windowHeight - chAnimData.rect.height},
+        {0,0,characterTexture.width / spriteCount, characterTexture.height}, // rect
+        {windowWidth / 2 - chAnimData.rect.width / 2, windowHeight - chAnimData.rect.height}, // vector
            0,
            0.0,
            1.0/12.0
@@ -40,12 +43,15 @@ int main()
     // Nebula Properties
     const int spriteCountPerCell = 8;
     Texture2D nebulaTexture = LoadTexture("textures/12_nebula_spritesheet.png");
-    Rectangle nebulaRect{0.0, 0.0, nebulaTexture.width / spriteCountPerCell, nebulaTexture.height / spriteCountPerCell};
-    Vector2 nebulaPosition{windowWidth, windowHeight - nebulaRect.height};
-    int nebulaVelocity{-50};
-    float elapsedNebulaAnimTime{0};
-    float totalNebulaAnimTime{1.0 / 12.0};
-    int nebulaSpriteFrame{0};
+
+    AnimData nebulaAnimData{{0.0, 0.0, nebulaTexture.width / spriteCountPerCell, nebulaTexture.height / spriteCountPerCell}, 
+    {windowWidth, windowHeight - nebulaAnimData.rect.height},
+    0,
+    0.0,
+    1.0/12.0
+    };
+
+    float nebulaVelocity {-50.0};
 
     while (!WindowShouldClose())
     {
@@ -72,7 +78,7 @@ int main()
         }
 
         chAnimData.pos.y += velocity * GetFrameTime();
-        nebulaPosition.x += nebulaVelocity * GetFrameTime();
+        nebulaAnimData.pos.x += nebulaVelocity * GetFrameTime();
 
         // Draw Texture and set animation
         DrawTextureRec(characterTexture, chAnimData.rect, chAnimData.pos, WHITE);
@@ -95,19 +101,19 @@ int main()
         }
 
         // Update nebula animation intervally.
-        elapsedNebulaAnimTime += GetFrameTime();
-        if (elapsedNebulaAnimTime >= totalNebulaAnimTime)
+        nebulaAnimData.elapsedTime += GetFrameTime();
+        if (nebulaAnimData.elapsedTime >= nebulaAnimData.totalTime)
         {
-            elapsedNebulaAnimTime = 0;
-            nebulaRect.x = nebulaSpriteFrame * nebulaRect.width;
-            nebulaSpriteFrame++;
-            if (nebulaSpriteFrame >= spriteCountPerCell)
+            nebulaAnimData.elapsedTime = 0;
+            nebulaAnimData.rect.x = nebulaAnimData.frame * nebulaAnimData.rect.width;
+            nebulaAnimData.frame++;
+            if (nebulaAnimData.frame >= spriteCountPerCell)
             {
-                nebulaSpriteFrame = 0;
+                nebulaAnimData.frame = 0;
             }
         }
 
-        DrawTextureRec(nebulaTexture, nebulaRect, nebulaPosition, WHITE);
+        DrawTextureRec(nebulaTexture, nebulaAnimData.rect, nebulaAnimData.pos, WHITE);
 
         EndDrawing();
     }
